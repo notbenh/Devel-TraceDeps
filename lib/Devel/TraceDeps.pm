@@ -246,13 +246,14 @@ sub _output {
   else {
     $fh = \*STDOUT;
   }
-  foreach my $key (keys(%store)) {
-    print $fh $key, "\n";
-    foreach my $item (@{$store{$key}}) {
-      print $fh join("\n", '  -----',
-        map({"  $_: $item->{$_}"} keys %$item)), "\n";
-    }
-  }
+
+  # Based on user input decide how we should ouput our tree:
+  my $class = sprintf q{Devel::TraceDeps::Output::%s}, $ENV{TraceDeps_Output_Type} || 'Eric';
+  eval qq{require $class} or die qq{$class was not found};
+  die  qq{$class is required to have an 'output' function} unless $class->can('output');
+
+  my $output = $class.q{::output};
+  $output->($fh,%store);
 }
 
 ########################################################################
